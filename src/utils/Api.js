@@ -1,7 +1,8 @@
 class Api {
-  constructor({ baseUrl, headers }) {
+  constructor({ baseUrl, headers, credentials }) {
     this._address = baseUrl;
     this._headers = headers;
+    this._credentials = credentials;
   }
 
   _checkResponse(res) {
@@ -20,6 +21,7 @@ class Api {
     return this._request(`users/me`, {
       method: "GET",
       headers: this._headers,
+      credentials: this._credentials,
     });
   }
 
@@ -27,6 +29,7 @@ class Api {
     return this._request(`users/me`, {
       method: "PATCH",
       headers: this._headers,
+      credentials: this._credentials,
       body: JSON.stringify({
         name: name,
         about: about,
@@ -38,6 +41,7 @@ class Api {
     return this._request(`cards`, {
       method: "GET",
       headers: this._headers,
+      credentials: this._credentials,
     });
   }
 
@@ -45,6 +49,7 @@ class Api {
     return this._request(`cards`, {
       method: "POST",
       headers: this._headers,
+      credentials: this._credentials,
       body: JSON.stringify({
         name: name,
         link: link,
@@ -56,6 +61,7 @@ class Api {
     return this._request(`users/me/avatar`, {
       method: "PATCH",
       headers: this._headers,
+      credentials: this._credentials,
       body: JSON.stringify({
         avatar: avatar,
       }),
@@ -66,6 +72,7 @@ class Api {
     return this._request(`cards/${cardId}`, {
       method: "DELETE",
       headers: this._headers,
+      credentials: this._credentials,
     });
   }
 
@@ -74,11 +81,13 @@ class Api {
       return this._request(`cards/${cardId}/likes`, {
         method: "PUT",
         headers: this._headers,
+        credentials: this._credentials,
       });
     } else {
       return this._request(`cards/${cardId}/likes`, {
         method: "DELETE",
         headers: this._headers,
+        credentials: this._credentials,
       });
     }
   }
@@ -87,14 +96,15 @@ class Api {
     return this._request(`users`, {
       method: "GET",
       headers: this._headers,
+      credentials: this._credentials,
     });
   }
 }
 
 export const api = new Api({
-  baseUrl: "https://mesto.nomoreparties.co/v1/cohort-64",
+  baseUrl: "http://localhost:3000",
   headers: {
-    authorization: "f64efd3e-3c8d-4834-a748-041ca1b1af96",
     "Content-Type": "application/json",
   },
+  credentials: 'include',
 });

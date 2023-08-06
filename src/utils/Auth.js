@@ -1,4 +1,4 @@
-const BASE_URL = "https://auth.nomoreparties.co";
+const BASE_URL = "http://localhost:3000";
 
 function checkResponse(res) {
   return res.ok ? res.json() : Promise.reject(`ОшибОЧКА: ${res.status}`);
@@ -11,6 +11,7 @@ export const register = (email, password) => {
       Accept: "application/json",
       "Content-Type": "application/json",
     },
+    credentials: 'include',
     body: JSON.stringify({
       email: email,
       password: password,
@@ -24,6 +25,7 @@ export const login = (email, password) => {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: 'include',
     body: JSON.stringify({
       email: email,
       password: password,
@@ -31,19 +33,32 @@ export const login = (email, password) => {
   })
     .then(checkResponse)
     .then((data) => {
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+    console.log(data);
+      if (data.jwt) {
         return data;
       }
     });
 };
 
-export const checkToken = (token) => {
+export const logout = () => {
+  return fetch(`${BASE_URL}/logout`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  })
+    .then(res => res.json())
+    .catch((err) => console.log('ОшибОЧКА:', err))
+}
+
+export const checkToken = (jwt) => {
   return fetch(`${BASE_URL}/users/me`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${jwt}`,
     },
+    credentials: 'include',
   }).then(checkResponse);
 };

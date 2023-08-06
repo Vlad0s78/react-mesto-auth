@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+// import Cookies from 'js-cookie';
 import Header from "./Header.js";
 import Main from "./Main.js";
 import Footer from "./Footer.js";
@@ -31,38 +32,43 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
+    if (isLoggedIn) {
+      api
       .getUserInfo()
       .then((userInfo) => setCurrentUser(userInfo))
       .catch((err) => console.log(`ОшибОЧКА ДРУГАЛЁЧЕК: ${err}`));
-  }, []);
-
-  useEffect(() => {
-    api
-      .getInitialCards()
-      .then((cards) => setCards(cards))
-      .catch((err) => console.log(`ОшибОЧКА ДРУГАЛЁЧЕК: ${err}`));
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      auth
-        .checkToken(token)
-        .then((res) => {
-          setIsLoggedIn(true);
-          setEmail(res.data.email);
-          navigate("/");
-        })
-        .catch((err) => {
-          if (err.status === 400) {
-            console.log("400 — Токен не передан");
-          } else if (err.status === 401) {
-            console.log("401 — Переданный токен некорректен");
-          }
-        });
     }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      api
+      .getInitialCards()
+      .then((cards) => setCards(cards.reverse()))
+      .catch((err) => console.log(`ОшибОЧКА ДРУГАЛЁЧЕК: ${err}`));
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    handleTokenCheck();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleTokenCheck() {
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
+      auth.checkToken(jwt)
+      .then((user) => {
+        setEmail(user.email);
+        setIsLoggedIn(true);
+        navigate("/", { replace: true });
+      })
+      .catch((err) => {
+        console.log(err);
+        setIsLoggedIn(false);
+      });
+    }
+  }
 
   function handleEditAvatarClick() {
     setIsEditAvatarPopupOpen(true);
@@ -81,10 +87,11 @@ export default function App() {
   }
 
   function handleCardLike(card) {
-    const isLiked = card.likes.some((i) => i._id === currentUser._id);
+    const isLiked = card.likes.some((i) => i === currentUser._id);
     api
       .changeLikeCardStatus(card._id, !isLiked)
       .then((newCard) => {
+        console.log(newCard);
         setCards((state) => state.map((c) => (c._id === card._id ? newCard : c)));
       })
       .catch((err) => console.log(`ОшибОЧКА ДРУГАЛЁЧЕК: ${err}`));
@@ -169,12 +176,11 @@ export default function App() {
   function handleLogin(email, password) {
     auth
       .login(email, password)
-      .then((res) => {
-        localStorage.setItem("token", res.token);
+      .then(() => {
         setIsLoggedIn(true);
         setEmail(email);
         navigate("/");
-      })
+    })
       .catch((err) => {
         if (err.status === 400) {
           console.log("400 - Не передано одно из полей");
@@ -186,10 +192,20 @@ export default function App() {
       });
   }
 
+
   function handleSignout() {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    navigate("/sign-in");
+    auth
+    .logout()
+      .then((res) => {
+        if (res.exit) {
+          setIsLoggedIn(false);
+          navigate("/sign-in");
+          document.cookie = "jwtChek=; expires=Mon, 25 Oct 1917 00:00:01 GMT;";
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   return (
